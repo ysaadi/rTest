@@ -32,8 +32,8 @@ public class hero {
 				TextConsole he= new TextConsole();
 				he.rFlushConsole(re);
 		        System.out.println("Rengine created, waiting for R");
-		        
-		        String path= "C:\\Users\\yaman\\Documents\\senior design\\Sham_SDraw.csv";
+		        re.eval("library(coexGenes)");
+		        String path= "C:\\\\Users\\\\yaman\\\\Documents\\\\senior design\\\\Sham_SDraw.csv";
 		       //String a=pathConvert();
 		       String a=path;
 		       a= a.replace('\\', '/');
@@ -71,9 +71,19 @@ public class hero {
 //		System.out.println(Arrays.toString(hereWeGo));
 		double[][] tryingHard= loadDataSetR(re, path, true, 1, "temp");
 		int[] covariates= {2,2,2,1,1,1,2,2,2,1,1,1,3,3,3,1,1,1};
-		ANOVA(re, tryingHard,covariates, .001, 0, "C:\\Users\\yaman\\Documents\\senior design\\SDanova" );
-		double[][] res=loadDataSetR(re, "C:\\Users\\yaman\\Documents\\senior design\\SDanova", true, 1, "temp");
-		printArray(res);
+		//printArray(tryingHard);
+		createRMatrix(tryingHard, re,"seeing" );
+		double[][] seeing= re.eval("seeing").asDoubleMatrix();
+		//printArray(seeing);
+		if( Arrays.deepEquals((Object[]) tryingHard, (Object[]) seeing)){
+			System.out.println("the two big test arrays are equal");
+		}
+		else{
+			System.out.println("got here but your stupid");
+		}
+		ANOVA(re, tryingHard,covariates, .001, 0, "C:\\\\Users\\\\yaman\\\\Documents\\\\senior design\\\\SDanova" );
+		double[][] res=loadDataSetR(re, "C:\\\\Users\\\\yaman\\\\Documents\\\\senior design\\\\SDanova", true, 1, "temp");
+		//printArray(res);
 	}
 	
 	public static void printArray(double matrix[][]) {
@@ -88,22 +98,20 @@ public class hero {
 		String strHeight=Integer.toString(height);
 		int colptr=0;
 		int rowptr=0;
-		String vecS= "c(";
+		int counter=0;
+		double[] vec= new double[len*height];
 		for(rowptr=0;rowptr<height;rowptr++){
 			for(colptr=0; colptr<len; colptr++){
-				if(vecS.equals("c(")){
-					vecS=vecS+ Double.toString(arr[rowptr][colptr]);
-				}
-				else{
-					vecS=vecS+ ", " + Double.toString(arr[rowptr][colptr]);
+				vec[counter]=arr[rowptr][colptr];
+				counter++;
 				}
 			}
-		}
-		vecS=vecS+")";
-		String evaluateThis=varName + " = matrix(" +vecS + ", nrow=" + strHeight + ", ncol=" +strLen + ", byrow = TRUE"+ ")";
+		re.assign("vecTemp", vec);
+		String evaluateThis=varName + " = matrix(vecTemp, nrow =" + strHeight + ", ncol=" +strLen + ", byrow = TRUE"+ ")";
 		re.eval(evaluateThis);
-		vecS= vecS+")";
-		System.out.println(vecS);
+		
+		//System.out.println(Arrays.toString(vec));
+		//printArray(arr);
 		System.out.println(evaluateThis);
 		
 	}
@@ -113,13 +121,14 @@ public class hero {
 		String Spval= Double.toString(pvalue);
 		String Strunc= Double.toString(truncValue);
 		re.assign("cov",covariates);
-		re.eval("filter.ANOVA(shamwow, cov, pvlaue = " +Spval + ",trunc_val=" + Strunc +", outfile= \"" + outFile + "\"" + ");" );
-		System.out.println("filter.ANOVA(shamwow, cov, pvlaue = " +Spval + ",trunc_val=" + Strunc +", outfile= \"" + outFile + "\"" + ");");
-	}
-	public static void ANOVA(Rengine re, String data, int[]covariates, double pvalue, double truncValue, String outFile){
-		//data is the path for the file/csv
+		System.out.println("filter.ANOVA(shamwow, cov, pvalue = " +Spval + ",trunc_val=" + Strunc +", outfile= \"" + outFile + "\"" + ");");
+		re.eval("filter.ANOVA(shamwow, cov, pvalue = " +Spval + ",trunc_val=" + Strunc +", outfile= \"" + outFile + "\"" + ");" );
 		
 	}
+//	public static void ANOVA(Rengine re, String data, int[]covariates, double pvalue, double truncValue, String outFile){
+//		//data is the path for the file/csv
+//		
+//	}
 	public static double[][] loadDataSetR(Rengine re, String file,boolean header, int rowName, String saveAs){
 		//takes a path of a csv and creates a matrix in R.  readTable asks for header and rowName.
 		String bool;
@@ -129,8 +138,10 @@ public class hero {
 		else{
 			bool="FALSE";
 		}
+		file=quote(file);
 		re.eval("filename=" + file + ";");
-		re.eval(saveAs+ "= read.table(" + file + ", header =" + bool + "sep= \",\"," +"row.names=" + rowName+ ");");
+		re.eval(saveAs+ "= read.table(" + file + ", header = " + bool + ", sep= \",\"," +"row.names=" + rowName+ ");");
+		System.out.println(saveAs+ "= read.table(" + file + ", header =" + bool + " sep= \",\"," +"row.names=" + rowName+ ");");
 		re.eval(saveAs + "=" + "as.matrix(" + saveAs + ");");
 		REXP x= re.eval(saveAs);
 		double[][] matrix= x.asDoubleMatrix();
@@ -181,7 +192,11 @@ public class hero {
 		return here;
 		
 	}
-	
+	public static String quote(String s){
+		//surrounds a string with quotes.
+		s= "\"" + s + "\"";
+		return s;
+	}
 //		public static String anova(Rengine re, int[] covariates, int pvalue,  ){
 //			
 //		}
