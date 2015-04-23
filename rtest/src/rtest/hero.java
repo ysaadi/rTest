@@ -51,38 +51,20 @@ public class hero {
 		       if(dub2==dub){
 		    	   System.out.println("success!");
 		       }
-//		       double[][] heroooo={{1.,2.,3.},{4.,5.,6.}};
-//		       System.out.println(heroooo.length);
-//		       System.out.println(heroooo[0].length);
-//		       System.out.println(heroooo[0][2]);
-//		createRMatrix(heroooo,re,"welp");
-//		REXP welp=re.eval("welp");
-//		double[][] crap= welp.asDoubleMatrix();
-//		printArray(crap);
-//		printArray(heroooo);
-//		if(Arrays.deepEquals((Object[]) heroooo,(Object[]) crap)){
-//			System.out.println("YES");
-//		}
-//		int[] testVectors= {1,2,3,4};
-//		re.assign("face", testVectors);
-//		REXP RtestVectors= re.eval("face");
-//		int[] hereWeGo= RtestVectors.asIntArray();
-//		System.out.println(Arrays.toString(testVectors));
-//		System.out.println(Arrays.toString(hereWeGo));
-		double[][] tryingHard= loadDataSetR(re, path, true, 1, "temp");
+		Rmatrix tryingHard= Rmatrix.loadRDataSet(re, path, true, 1, "temp");
 		int[] covariates= {2,2,2,1,1,1,2,2,2,1,1,1,3,3,3,1,1,1};
 		//printArray(tryingHard);
-		createRMatrix(tryingHard, re,"seeing" );
+		Rmatrix.sendRDataFrame(re, tryingHard, "seeing");
 		double[][] seeing= re.eval("seeing").asDoubleMatrix();
 		//printArray(seeing);
-		if( Arrays.deepEquals((Object[]) tryingHard, (Object[]) seeing)){
+		if( Arrays.deepEquals((Object[]) tryingHard.matrix, (Object[]) seeing)){
 			System.out.println("the two big test arrays are equal");
 		}
 		else{
 			System.out.println("got here but your stupid");
 		}
 		ANOVA(re, tryingHard,covariates, .001, 0, "C:\\\\Users\\\\yaman\\\\Documents\\\\senior design\\\\SDanova" );
-		double[][] res=loadDataSetR(re, "C:\\\\Users\\\\yaman\\\\Documents\\\\senior design\\\\SDanova", true, 1, "temp");
+		Rmatrix res=Rmatrix.loadRDataSet(re, "C:\\\\Users\\\\yaman\\\\Documents\\\\senior design\\\\SDanova", true, 1, "temp");
 		//printArray(res);
 	}
 	
@@ -90,34 +72,34 @@ public class hero {
 	    for (double[] row : matrix) 
 	        System.out.println(Arrays.toString(row));       
 	}
-	public static void createRMatrix(double[][] arr, Rengine re, String varName){
-		// takes a 2 d double array and saves it in R as the variable Name.
-		int len= arr[0].length;
-		int height=arr.length;
-		String strLen=Integer.toString(len);
-		String strHeight=Integer.toString(height);
-		int colptr=0;
-		int rowptr=0;
-		int counter=0;
-		double[] vec= new double[len*height];
-		for(rowptr=0;rowptr<height;rowptr++){
-			for(colptr=0; colptr<len; colptr++){
-				vec[counter]=arr[rowptr][colptr];
-				counter++;
-				}
-			}
-		re.assign("vecTemp", vec);
-		String evaluateThis=varName + " = matrix(vecTemp, nrow =" + strHeight + ", ncol=" +strLen + ", byrow = TRUE"+ ")";
-		re.eval(evaluateThis);
+//	public static void createRMatrix(double[][] arr, Rengine re, String varName){
+//		// takes a 2 d double array and saves it in R as the variable Name.
+//		int len= arr[0].length;
+//		int height=arr.length;
+//		String strLen=Integer.toString(len);
+//		String strHeight=Integer.toString(height);
+//		int colptr=0;
+//		int rowptr=0;
+//		int counter=0;
+//		double[] vec= new double[len*height];
+//		for(rowptr=0;rowptr<height;rowptr++){
+//			for(colptr=0; colptr<len; colptr++){
+//				vec[counter]=arr[rowptr][colptr];
+//				counter++;
+//				}
+//			}
+//		re.assign("vecTemp", vec);
+//		String evaluateThis=varName + " = matrix(vecTemp, nrow =" + strHeight + ", ncol=" +strLen + ", byrow = TRUE"+ ")";
+//		re.eval(evaluateThis);
+//		
+//		//System.out.println(Arrays.toString(vec));
+//		//printArray(arr);
+//		System.out.println(evaluateThis);
+//		
+//	}
+	public static void ANOVA( Rengine re, Rmatrix matrix, int[] covariates, double pvalue, double truncValue, String outFile){
 		
-		//System.out.println(Arrays.toString(vec));
-		//printArray(arr);
-		System.out.println(evaluateThis);
-		
-	}
-	public static void ANOVA( Rengine re, double[][] matrix, int[] covariates, double pvalue, double truncValue, String outFile){
-		
-		createRMatrix(matrix, re, "shamwow");
+		Rmatrix.sendRDataFrame(re, matrix, "shamwow");
 		String Spval= Double.toString(pvalue);
 		String Strunc= Double.toString(truncValue);
 		re.assign("cov",covariates);
@@ -129,26 +111,26 @@ public class hero {
 //		//data is the path for the file/csv
 //		
 //	}
-	public static double[][] loadDataSetR(Rengine re, String file,boolean header, int rowName, String saveAs){
-		//takes a path of a csv and creates a matrix in R.  readTable asks for header and rowName.
-		String bool;
-		if(header==true){
-			bool="TRUE";
-		}
-		else{
-			bool="FALSE";
-		}
-		file=quote(file);
-		re.eval("filename=" + file + ";");
-		re.eval(saveAs+ "= read.table(" + file + ", header = " + bool + ", sep= \",\"," +"row.names=" + rowName+ ");");
-		System.out.println(saveAs+ "= read.table(" + file + ", header =" + bool + " sep= \",\"," +"row.names=" + rowName+ ");");
-		re.eval(saveAs + "=" + "as.matrix(" + saveAs + ");");
-		REXP x= re.eval(saveAs);
-		double[][] matrix= x.asDoubleMatrix();
-		return matrix;
-	}
-	public static double optNumClust(Rengine re, double[][] data, String metric, double bLog, double bScale ){
-		createRMatrix(data, re, "temp");
+//	public static double[][] loadDataSetR(Rengine re, String file,boolean header, int rowName, String saveAs){
+//		//takes a path of a csv and creates a matrix in R.  readTable asks for header and rowName.
+//		String bool;
+//		if(header==true){
+//			bool="TRUE";
+//		}
+//		else{
+//			bool="FALSE";
+//		}
+//		file=quote(file);
+//		re.eval("filename=" + file + ";");
+//		re.eval(saveAs+ "= read.table(" + file + ", header = " + bool + ", sep= \",\"," +"row.names=" + rowName+ ");");
+//		System.out.println(saveAs+ "= read.table(" + file + ", header =" + bool + " sep= \",\"," +"row.names=" + rowName+ ");");
+//		re.eval(saveAs + "=" + "as.matrix(" + saveAs + ");");
+//		REXP x= re.eval(saveAs);
+//		double[][] matrix= x.asDoubleMatrix();
+//		return matrix;
+//	}
+	public static double optNumClust(Rengine re, Rmatrix data, String metric, double bLog, double bScale ){
+		Rmatrix.sendRDataFrame(re, data, "temp");
 		String SbScale= Double.toString(bScale);
 		String SbLog= Double.toString(bLog);
 		re.eval("optTem = optNumClust(temp , metric = c(\"" + metric + "\"), bLog = " +SbLog + ", bScale=" +SbScale);
@@ -177,7 +159,7 @@ public class hero {
 		return path;
 	}
 	
-	public static double[][] coexCluster(Rengine re, double[][] data,  double NumCluster, double FagrLevel, boolean GS, String Metric, double bLog, double bScale, double nResamplingTimes, double pValue){
+	public static double[][] coexCluster(Rengine re, Rmatrix data,  double NumCluster, double FagrLevel, boolean GS, String Metric, double bLog, double bScale, double nResamplingTimes, double pValue){
 		String SNumCluster= Double.toString(NumCluster);
 		String SFagrLevel= Double.toString(FagrLevel);
 		String SGS= Boolean.toString(GS).toUpperCase();
@@ -185,7 +167,7 @@ public class hero {
 		String SbScale= Double.toString(bScale);
 		String SsampleTime= Double.toString(nResamplingTimes);
 		String SpValue= Double.toString(pValue);
-		createRMatrix(data, re, "data");
+		Rmatrix.sendRDataFrame(re, data, "data");
 		re.eval("results= coexPatt(data, nCluster=" + SNumCluster +", fAgrLevel=" +SFagrLevel + ", GS= " +SGS +", metric= c(\"" +Metric + "\"), bLog = " + SbLog + ", bScale=" +SbScale + ", nResamplingTimes = " + SsampleTime + ", pValue=" + SpValue + ");");
 		REXP res= re.eval("results");
 		double[][] here= res.asDoubleMatrix();

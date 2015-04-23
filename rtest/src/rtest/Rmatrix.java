@@ -53,10 +53,19 @@ public class Rmatrix {
 //	        System.out.println(Arrays.toString(dim));
 //	        System.out.println(names.length);
 	        Rmatrix testing= loadRDataSet(re,file,true,1,"savehere");
-	        System.out.println(Arrays.toString((Object[]) testing.header));
 	        
+//	        System.out.println(Arrays.toString((Object[]) testing.header));
+//	        sendRDataFrame(re, testing, "shave");
+//	        String[] backForth=re.eval("colnames(shave, do.NULL=FALSE)").asStringArray();
+//	        System.out.println(Arrays.toString((Object[]) backForth));
+//	        String[] testingString=null;
+//	        String[] testingString2= {"a","b"};
+//	        if(true){
+//	        testingString= new String[2];
+//	        testingString[1]="printg";
+//	        System.out.println(testingString[1]);
+	        }
 		
-	}
 	public static Rmatrix loadRDataSet(Rengine re, String file,boolean header, int rowName, String saveAs){
 		//rowNames here will indicate the index of the rownames in the dataset.  R will store that column as the names for the rows
 		//that follow it.
@@ -80,9 +89,84 @@ public class Rmatrix {
 		if(header){       /*if not header: ie if header is false */
 			System.out.println("temp= read.table(" + file + ", header =FALSE, sep= \",\"," +" nrows=1);");
 			re.eval("temp= read.table(" + file + ", header =FALSE, sep= \",\"," +", nrows=1);");
+			re.eval("temp=as.matrix(temp)");
+			re.eval("unname(temp)");
 			headcols=re.eval("temp[1,]").asStringArray();
 		}
 		Rmatrix ret= new Rmatrix(rowNames, headcols, matrix);
 		return ret;
+	}
+
+	public static void sendRDataFrame(Rengine re, Rmatrix mat, String saveAs){
+		// takes a 2 d double array and saves it in R as the variable Name.
+		int len= mat.matrix[0].length;
+		int height= mat.matrix.length;
+		String strLen=Integer.toString(len);
+		String strHeight=Integer.toString(height);
+		int colptr=0;
+		int rowptr=0;
+		int counter=0;
+		double[] vec= new double[len*height];
+		for(rowptr=0;rowptr<height;rowptr++){
+			for(colptr=0; colptr<len; colptr++){
+				vec[counter]=mat.matrix[rowptr][colptr];
+				counter++;
+				}
+			}
+		re.assign("vecTemp", vec);
+		String evaluateThis=saveAs + " = matrix(vecTemp, nrow =" + strHeight + ", ncol=" +strLen + ", byrow = TRUE"+ ")";
+		re.eval(evaluateThis);
+		re.assign("rownames", mat.rowNames);
+		re.assign("colnamess", makeColNames(mat.header));
+		re.eval("row.names("+ saveAs +") <-rownames ");
+		re.eval("colnames("+ saveAs +") <-colnamess ");
+		//System.out.println(Arrays.toString(vec));
+		//printArray(arr);
+		System.out.println(evaluateThis);
+	}
+	public static String [] makeColNames(String[] colNames){
+		//the behavior of this method is wierd, it creates a matrix one larger than what I initially wanted 
+		//it to create, but for some reason, R accepts it?
+		int ln= colNames.length;
+		String[] col= new String[ln-1];
+		String ind;
+		for( int x=1; x<ln-1; x++){
+		ind= colNames[x];
+				/*R does not allow colnames to start with numbers, so i 
+				 * check if its a number by converting it to ascii*/
+		if((int) ind.charAt(0)>=46 && (int) ind.charAt(0)<=57){ 
+			ind= "X." +ind;  
+		}
+		col[x]=ind;
+		}
+		return col;
+	}
+	public static String [] revertColNames(String[] jcolNames){
+		int ln= jcolNames.length;
+		String[] col= new String[ln];
+		String ind;
+		for( int x=0; x<ln; x++){
+		ind= jcolNames[x];
+		if( ind.substring(0,2).equals("X.")){
+			ind= ind.substring(2);
+		}
+		col[x]=ind;
+		}
+		return col;
+	}
+	public boolean equals(Object other){
+		if (other == null)
+		   {
+		      return false;
+		   }
+
+		   if (this.getClass() != other.getClass())
+		   {
+		      return false;
+		   }
+		   if(Arrays.equals(this.header, ((Rmatrix)other).header)  && Arrays.equals(this.rowNames, ((Rmatrix)other).rowNames) && Arrays.deepEquals(this.matrix,((Rmatrix)other).matrix)){
+			   return true;
+		   }
+		return false;
 	}
 }
