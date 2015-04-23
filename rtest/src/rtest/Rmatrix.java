@@ -65,7 +65,9 @@ public class Rmatrix {
 //	        testingString[1]="printg";
 //	        System.out.println(testingString[1]);
 	        }
-		
+	/*loads a dataset from a csv file into R and saves it as String saveas, then also saves all the assets of the csv into 
+	 * an Rmatrix datatype.
+	 */
 	public static Rmatrix loadRDataSet(Rengine re, String file,boolean header, int rowName, String saveAs){
 		//rowNames here will indicate the index of the rownames in the dataset.  R will store that column as the names for the rows
 		//that follow it.
@@ -123,6 +125,14 @@ public class Rmatrix {
 		//System.out.println(Arrays.toString(vec));
 		//printArray(arr);
 		System.out.println(evaluateThis);
+	}
+	public static Rmatrix loadRmatrixObj(Rengine re, String saved){
+		Rmatrix returned= new Rmatrix(null,null,null);
+		returned.matrix=re.eval(saved).asDoubleMatrix();
+		returned.header=re.eval("colnames("+ saved +");").asStringArray();
+		returned.rowNames=re.eval("rownames("+ saved +");").asStringArray();
+		return returned;
+		
 	}
 	public static String [] makeColNames(String[] colNames){
 		//the behavior of this method is wierd, it creates a matrix one larger than what I initially wanted 
