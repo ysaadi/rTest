@@ -17,7 +17,7 @@ import java.util.Scanner;
 public class hero {
 	//path C:\Users\yaman\Documents\senior design\Sham_SDraw.csv
 	public static void main(String args[]){
-		
+		long startTime = System.currentTimeMillis();
 			// just making sure we have the right version of everything
 			if (!Rengine.versionCheck()) {
 			    System.err.println("** Version mismatch - Java files don't match library version.");
@@ -63,9 +63,15 @@ public class hero {
 		else{
 			System.out.println("got here but your stupid");
 		}
-		ANOVA(re, tryingHard,covariates, .001, 0, "C:\\\\Users\\\\yaman\\\\Documents\\\\senior design\\\\SDanova" );
-		Rmatrix res=Rmatrix.loadRDataSet(re, "C:\\\\Users\\\\yaman\\\\Documents\\\\senior design\\\\SDanova", true, 1, "temp");
-		//printArray(res);
+		ANOVA(re, tryingHard,covariates, .001, 0, "C:\\\\Users\\\\yaman\\\\Documents\\\\senior design\\\\SDanova.csv" );
+		Rmatrix res=Rmatrix.loadRDataSet(re, "C:\\\\Users\\\\yaman\\\\Documents\\\\senior design\\\\SDanova.csv", true, 1, "temp");
+		printArray(res.matrix);
+		long endTime = System.currentTimeMillis();
+		System.out.println("That took " + (endTime - startTime) + " milliseconds");
+		System.out.println(Arrays.toString(res.header));
+		double d= hero.optNumClust(re, "temp", "c(\"default\")", 0, 1);
+		System.out.println(d);
+		
 	}
 	
 	public static void printArray(double matrix[][]) {
@@ -129,12 +135,12 @@ public class hero {
 //		double[][] matrix= x.asDoubleMatrix();
 //		return matrix;
 //	}
-	public static double optNumClust(Rengine re, Rmatrix data, String metric, double bLog, double bScale ){
-		Rmatrix.sendRDataFrame(re, data, "temp");
+	public static double optNumClust(Rengine re, String Saved, String metric, double bLog, double bScale ){
 		String SbScale= Double.toString(bScale);
 		String SbLog= Double.toString(bLog);
-		re.eval("optTem = optNumClust(temp , metric = c(\"" + metric + "\"), bLog = " +SbLog + ", bScale=" +SbScale);
-		REXP temp= re.eval("optTem");
+		System.out.println("optTem = optNumClust("+Saved+", metric ="+  metric +", bLog = " +SbLog + ", bScale=" +SbScale+");");
+		re.eval("optTem = optNumClust("+Saved+", metric ="+  metric +", bLog = " +SbLog + ", bScale=" +SbScale+");");
+		REXP temp= re.eval("optTem$optNo");
 		double d= temp.asDouble();
 		return d;
 	}

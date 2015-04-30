@@ -17,6 +17,7 @@ import org.rosuda.JRI.RMainLoopCallbacks;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 public class Rmatrix {
 	String[] rowNames;
 	String[] header;
@@ -64,6 +65,21 @@ public class Rmatrix {
 //	        testingString= new String[2];
 //	        testingString[1]="printg";
 //	        System.out.println(testingString[1]);
+	        double[][] trying={{1,2,3},{4,5,6}};					/*testing the .equals method here*/
+	        String[] tryhead={"hey","hello"};
+	        String[] tryrow= {"heys","hellos"};
+	        double[][] trying2={{1,2,3},{4,5,6}};
+	        String[] tryhead2={"hey","hello"};
+	        String[] tryrow2= {"heys","hellos"};
+	        Rmatrix testEq1= new Rmatrix(tryhead,tryrow,trying);
+	        Rmatrix testEq2= new Rmatrix(tryhead2,tryrow2,trying2);
+	        System.out.println(testEq1.equals(testEq2));     			/*end test*/
+	        
+	        Rmatrix continuity = loadRDataSet(re,file,true,1,"savethis");
+	        Rmatrix continuity2= loadRmatrixObj(re,"savethis");
+	        System.out.println(continuity.equals(continuity2));
+	        System.out.println(Arrays.toString(continuity.header));
+	        System.out.println(Arrays.toString(continuity2.header));
 	        }
 	/*loads a dataset from a csv file into R and saves it as String saveas, then also saves all the assets of the csv into 
 	 * an Rmatrix datatype.
@@ -94,6 +110,22 @@ public class Rmatrix {
 			re.eval("temp=as.matrix(temp)");
 			re.eval("unname(temp)");
 			headcols=re.eval("temp[1,]").asStringArray();
+			if(headcols==null){
+				int[] nums=re.eval("temp[1,]").asIntArray();
+				//int[] nums=re.eval("colnames("+saveAs+");").asIntArray();
+				String [] headcols2= new String[nums.length];
+				headcols=headcols2;
+				// headcols=makeColNames(headcols);
+				for(int z=0; z<nums.length; z++){
+					headcols2[z]=Integer.toString(nums[z]);
+				}
+			}
+			else{
+			int[] dim=re.eval("dim("+saveAs+");").asIntArray();
+			if(matrix[0].length==headcols.length+1){
+			//headcols=makeColNames(headcols);
+			}
+			}
 		}
 		Rmatrix ret= new Rmatrix(rowNames, headcols, matrix);
 		return ret;
@@ -137,17 +169,30 @@ public class Rmatrix {
 	public static String [] makeColNames(String[] colNames){
 		//the behavior of this method is wierd, it creates a matrix one larger than what I initially wanted 
 		//it to create, but for some reason, R accepts it?
+		if( colNames== null){
+			return null;
+		}
 		int ln= colNames.length;
 		String[] col= new String[ln-1];
 		String ind;
-		for( int x=1; x<ln-1; x++){
+		for( int x=1; x<ln; x++){
 		ind= colNames[x];
 				/*R does not allow colnames to start with numbers, so i 
 				 * check if its a number by converting it to ascii*/
 		if((int) ind.charAt(0)>=46 && (int) ind.charAt(0)<=57){ 
-			ind= "X." +ind;  
+			int count=0;
+			
+			for( int y=1; y<x;y++){
+				if(ind.equals(colNames[y])){
+					count++;
+				}
+			}
+			ind= "X" +ind;  
+			if(count>0){
+				ind= ind+ "."+Integer.toString(count);
+			}
 		}
-		col[x]=ind;
+		col[x-1]=ind;
 		}
 		return col;
 	}
